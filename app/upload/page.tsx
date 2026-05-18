@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AnalyzeButton from "@/components/upload/AnalyzeButton";
 import FileDrop from "@/components/upload/FileDrop";
 import JDInput from "@/components/upload/JDInput";
+import BackButton from "@/components/ui/BackButton";
 import { isAnalysisResult, type AnalysisResult } from "@/types/analysis";
 
 export default function UploadPage(): React.JSX.Element {
@@ -87,6 +88,9 @@ export default function UploadPage(): React.JSX.Element {
       </div>
 
       <section className="relative z-10 mx-auto w-full max-w-3xl animate-fade-in-up rounded-3xl border border-white/10 bg-zinc-950/70 p-6 backdrop-blur-md sm:p-8">
+        <div className="mb-5">
+          <BackButton href="/" label="Back to Home" size="sm" />
+        </div>
         <h1 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Optimize Your Resume for a Job
         </h1>

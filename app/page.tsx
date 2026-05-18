@@ -37,11 +37,11 @@ export default function Home(): React.JSX.Element {
             AI Resume Builder
           </span>
           <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
-            Build a Resume That Actually Gets You Hired
+            Smart Resume Builder for Freshers 
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-zinc-300 sm:text-lg">
-            AI-powered resume builder that makes you sound impressive, not
-            boring
+            Generate ATS-friendly resumes with AI-guided suggestions, clean templates, and optimized 
+content designed to help students and freshers land interviews faster. 
           </p>
         </div>
 

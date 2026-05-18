@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DownloadButton from "@/components/preview/DownloadButton";
 import ResumeTemplate from "@/components/preview/ResumeTemplate";
+import BackButton from "@/components/ui/BackButton";
 import { parseResumeText } from "@/lib/resumeParser";
 import type { ResumeData } from "@/types/resume";
 
@@ -57,7 +58,9 @@ export default function PreviewPage(): React.JSX.Element {
   if (state === "loading") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-zinc-200">
-        <p className="animate-pulse text-sm text-zinc-400">Loading optimized resume...</p>
+        <p className="animate-pulse text-sm text-zinc-400">
+          Loading optimized resume...
+        </p>
       </main>
     );
   }
@@ -72,13 +75,9 @@ export default function PreviewPage(): React.JSX.Element {
           <p className="mt-2 text-sm text-zinc-300">
             Please go back and try again.
           </p>
-          <button
-            type="button"
-            onClick={() => router.push("/results")}
-            className="mt-5 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-violet-500"
-          >
-            ← Go Back
-          </button>
+          <div className="mt-5 flex justify-center">
+            <BackButton href="/results" label="Back to Results" />
+          </div>
         </section>
       </main>
     );
@@ -86,7 +85,8 @@ export default function PreviewPage(): React.JSX.Element {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] px-6 py-10 sm:px-10 print:bg-white print:p-0">
-      <section className="no-print mx-auto mb-6 flex w-full max-w-3xl items-center justify-between gap-3">
+      <section className="no-print mx-auto mb-6 flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
+        <BackButton href="/results" label="Back to Results" size="sm" />
         <h1 className="text-2xl font-bold text-white sm:text-3xl">
           Your Optimized Resume
         </h1>

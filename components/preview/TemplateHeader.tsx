@@ -18,14 +18,21 @@ function buildLinks(contact: ContactInfo): ContactLink[] {
     links.push({ label: contact.email, href: `mailto:${contact.email}` });
   }
   if (contact.phone) {
-    links.push({ label: contact.phone, href: `tel:${contact.phone.replace(/\s/g, "")}` });
+    links.push({
+      label: contact.phone,
+      href: `tel:${contact.phone.replace(/\s/g, "")}`,
+    });
   }
   if (contact.linkedin) {
-    const url = contact.linkedin.startsWith("http") ? contact.linkedin : `https://${contact.linkedin}`;
+    const url = contact.linkedin.startsWith("http")
+      ? contact.linkedin
+      : `https://${contact.linkedin}`;
     links.push({ label: "LinkedIn", href: url, external: true });
   }
   if (contact.github) {
-    const url = contact.github.startsWith("http") ? contact.github : `https://${contact.github}`;
+    const url = contact.github.startsWith("http")
+      ? contact.github
+      : `https://${contact.github}`;
     links.push({ label: "GitHub", href: url, external: true });
   }
   if (contact.website) {
@@ -53,9 +60,9 @@ export default function TemplateHeader({
       )}
       {links.length > 0 && (
         <nav className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
-          {links.map((link) => (
+          {links.map((link, index) => (
             <a
-              key={link.href}
+              key={`${link.href}-${link.label}-${index}`}
               href={link.href}
               target={link.external ? "_blank" : undefined}
               rel={link.external ? "noopener noreferrer" : undefined}

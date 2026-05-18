@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import BackButton from "@/components/ui/BackButton";
 import ScoreCard from "./ScoreCard";
 
 type ResultsHeaderProps = {
@@ -14,18 +14,10 @@ export default function ResultsHeader({
   onApplyAll,
   applyLoading,
 }: ResultsHeaderProps): React.JSX.Element {
-  const router = useRouter();
-
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0a0a0a]/90 px-6 py-3 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
-        <button
-          type="button"
-          onClick={() => router.push("/upload")}
-          className="text-sm font-medium text-zinc-400 transition hover:text-white"
-        >
-          ← Back to Upload
-        </button>
+        <BackButton href="/upload" label="Back to Upload" size="sm" />
 
         <ScoreCard score={score} compact />
 
