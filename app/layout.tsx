@@ -36,9 +36,9 @@ export default function RootLayout({
                 CVForge
               </Link>
             </div>
-              <span className="absolute right-4 top-4 rounded-full border border-violet-400/40 bg-violet-500/10 px-2.5 py-0.5 text-sm font-semibold text-violet-200">
-                Beta Version
-              </span>
+            <span className="absolute right-4 top-4 rounded-full border border-violet-400/40 bg-violet-500/10 px-2.5 py-0.5 text-sm font-semibold text-violet-200">
+              Beta Version
+            </span>
           </div>
         </header>
 
@@ -53,7 +53,10 @@ export default function RootLayout({
               <Link href="/disclaimer" className="transition hover:text-white">
                 Disclaimer
               </Link>
-              <Link href="/privacy-policy" className="transition hover:text-white">
+              <Link
+                href="/privacy-policy"
+                className="transition hover:text-white"
+              >
                 Privacy Policy
               </Link>
             </div>
