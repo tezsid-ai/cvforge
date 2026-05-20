@@ -1,6 +1,6 @@
 "use client";
 
-import type { QuestionType } from "@/lib/chatQuestions";
+import type { ChatQuestion, QuestionType } from "@/lib/chatQuestions";
 import ChatInput from "./ChatInput";
 import SkillChips from "./SkillChips";
 import ExperienceSlider from "./ExperienceSlider";
@@ -13,16 +13,24 @@ type QuestionRendererProps = {
   type: QuestionType;
   onAnswer: (value: string) => void;
   disabled: boolean;
+  meta?: ChatQuestion["meta"];
 };
 
 export default function QuestionRenderer({
   type,
   onAnswer,
   disabled,
+  meta,
 }: QuestionRendererProps): React.JSX.Element {
   switch (type) {
     case "contact":
-      return <ContactForm onSubmit={onAnswer} />;
+      return (
+        <ContactForm
+          onSubmit={onAnswer}
+          showGithub={meta?.showGithub}
+          showLinkedin={meta?.showLinkedin}
+        />
+      );
     case "role":
       return <RoleCards onSubmit={onAnswer} />;
     case "experience":
@@ -30,7 +38,9 @@ export default function QuestionRenderer({
     case "techSkills":
       return <SkillChips onSubmit={(skills) => onAnswer(skills.join(", "))} />;
     case "softSkills":
-      return <SoftSkillBadges onSubmit={(skills) => onAnswer(skills.join(", "))} />;
+      return (
+        <SoftSkillBadges onSubmit={(skills) => onAnswer(skills.join(", "))} />
+      );
     case "project":
       return <ProjectCard onSubmit={onAnswer} />;
     case "textarea":

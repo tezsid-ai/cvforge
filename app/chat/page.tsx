@@ -9,9 +9,11 @@ type Mode = "landing" | "withJd" | "chat";
 export default function ChatPage(): React.JSX.Element {
   const [mode, setMode] = useState<Mode>("landing");
   const [jd, setJd] = useState("");
+  const [jdReady, setJdReady] = useState(false);
 
-  if (mode === "chat" || (mode === "withJd" && jd.trim())) {
-    if (mode === "withJd" && !jd.trim()) {
+  if (mode === "chat" || (mode === "withJd" && jdReady)) {
+    if (mode === "withJd" && (!jd.trim() || !jdReady)) {
+      setJdReady(false);
       setMode("landing");
       return <></>;
     }
@@ -29,7 +31,10 @@ export default function ChatPage(): React.JSX.Element {
           <h1 className="mb-2 text-center text-xl font-bold text-white">
             AI Resume Builder
           </h1>
-          <ChatWindow jobDescription={mode === "withJd" ? jd : ""} />
+          <ChatWindow
+            jobDescription={mode === "withJd" ? jd : ""}
+            mode={mode === "withJd" ? "withJd" : "scratch"}
+          />
         </div>
       </main>
     );
@@ -67,7 +72,7 @@ export default function ChatPage(): React.JSX.Element {
             <button
               type="button"
               disabled={!jd.trim()}
-              onClick={() => setMode("chat")}
+              onClick={() => setJdReady(true)}
               className="flex-1 rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-40"
             >
               Start Building →
@@ -100,7 +105,10 @@ export default function ChatPage(): React.JSX.Element {
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <button
               type="button"
-              onClick={() => setMode("withJd")}
+              onClick={() => {
+                setJdReady(false);
+                setMode("withJd");
+              }}
               className="group rounded-2xl border border-white/10 bg-zinc-900/60 p-7 text-left backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/70 hover:shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_14px_45px_rgba(79,70,229,0.28)]"
             >
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 text-2xl shadow-lg shadow-indigo-500/25">
@@ -117,6 +125,7 @@ export default function ChatPage(): React.JSX.Element {
               type="button"
               onClick={() => {
                 setJd("");
+                setJdReady(false);
                 setMode("chat");
               }}
               className="group rounded-2xl border border-white/10 bg-zinc-900/60 p-7 text-left backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/70 hover:shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_14px_45px_rgba(79,70,229,0.28)]"

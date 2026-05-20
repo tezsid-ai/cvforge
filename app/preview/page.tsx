@@ -37,10 +37,19 @@ export default function PreviewPage(): React.JSX.Element {
   const router = useRouter();
   const [data, setData] = useState<ResumeData | null>(null);
   const [state, setState] = useState<PageState>("loading");
+  const [backTarget, setBackTarget] = useState({
+    href: "/results",
+    label: "Back to Results",
+  });
 
   useEffect(() => {
     const raw = sessionStorage.getItem("finalResume");
     console.log("[Preview] Raw sessionStorage value:", raw);
+
+    const source = sessionStorage.getItem("resumeSource");
+    if (source === "chat") {
+      setBackTarget({ href: "/chat", label: "Back to Builder" });
+    }
 
     // Case 1: Nothing stored
     if (!raw || !raw.trim()) {
@@ -76,7 +85,7 @@ export default function PreviewPage(): React.JSX.Element {
             Please go back and try again.
           </p>
           <div className="mt-5 flex justify-center">
-            <BackButton href="/results" label="Back to Results" />
+            <BackButton href={backTarget.href} label={backTarget.label} />
           </div>
         </section>
       </main>
@@ -86,7 +95,7 @@ export default function PreviewPage(): React.JSX.Element {
   return (
     <main className="min-h-screen bg-[#0a0a0a] px-6 py-10 sm:px-10 print:bg-white print:p-0">
       <section className="no-print mx-auto mb-6 flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
-        <BackButton href="/results" label="Back to Results" size="sm" />
+        <BackButton href={backTarget.href} label={backTarget.label} size="sm" />
         <h1 className="text-2xl font-bold text-white sm:text-3xl">
           Your Optimized Resume
         </h1>

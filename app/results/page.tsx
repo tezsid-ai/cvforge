@@ -60,6 +60,7 @@ export default function ResultsPage(): React.JSX.Element {
       const data = (await res.json()) as { finalResume?: string };
       if (!res.ok || !data.finalResume) throw new Error();
       sessionStorage.setItem("finalResume", data.finalResume);
+      sessionStorage.setItem("resumeSource", "upload");
       setShowChallenge(true);
     } catch {
       /* error handled silently */
@@ -105,9 +106,13 @@ export default function ResultsPage(): React.JSX.Element {
                 "finalResume",
                 `${existing}\n\nHow I Solved a Professional Challenge\nProblem: ${c.problem}\nAction: ${c.action}\nResult: ${c.result}`,
               );
+              sessionStorage.setItem("resumeSource", "upload");
               router.push("/preview");
             }}
-            onSkip={() => router.push("/preview")}
+            onSkip={() => {
+              sessionStorage.setItem("resumeSource", "upload");
+              router.push("/preview");
+            }}
           />
         </div>
       </main>

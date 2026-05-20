@@ -4,10 +4,14 @@ import { useState } from "react";
 
 type ContactFormProps = {
   onSubmit: (data: string) => void;
+  showGithub?: boolean;
+  showLinkedin?: boolean;
 };
 
 export default function ContactForm({
   onSubmit,
+  showGithub = true,
+  showLinkedin = true,
 }: ContactFormProps): React.JSX.Element {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -18,8 +22,8 @@ export default function ContactForm({
     const parts = [
       email && `Email: ${email}`,
       phone && `Phone: ${phone}`,
-      linkedin && `LinkedIn: ${linkedin}`,
-      github && `GitHub: ${github}`,
+      showLinkedin && linkedin && `LinkedIn: ${linkedin}`,
+      showGithub && github && `GitHub: ${github}`,
     ].filter(Boolean);
     if (parts.length > 0) onSubmit(parts.join(" | "));
   };
@@ -29,10 +33,38 @@ export default function ContactForm({
 
   return (
     <div className="space-y-2.5">
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={fieldClass} />
-      <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className={fieldClass} />
-      <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="LinkedIn profile URL" className={fieldClass} />
-      <input type="text" value={github} onChange={(e) => setGithub(e.target.value)} placeholder="GitHub username" className={fieldClass} />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        className={fieldClass}
+      />
+      <input
+        type="tel"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        placeholder="Phone"
+        className={fieldClass}
+      />
+      {showLinkedin ? (
+        <input
+          type="text"
+          value={linkedin}
+          onChange={(e) => setLinkedin(e.target.value)}
+          placeholder="LinkedIn profile URL"
+          className={fieldClass}
+        />
+      ) : null}
+      {showGithub ? (
+        <input
+          type="text"
+          value={github}
+          onChange={(e) => setGithub(e.target.value)}
+          placeholder="GitHub username"
+          className={fieldClass}
+        />
+      ) : null}
       <button
         type="button"
         disabled={!email.trim()}
