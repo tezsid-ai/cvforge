@@ -26,13 +26,16 @@ function buildLinks(contact: ContactInfo): ContactLink[] {
   if (contact.linkedin) {
     const url = contact.linkedin.startsWith("http")
       ? contact.linkedin
-      : `https://${contact.linkedin}`;
+      : `https://${contact.linkedin.replace(/^@/, "")}`;
     links.push({ label: "LinkedIn", href: url, external: true });
   }
   if (contact.github) {
-    const url = contact.github.startsWith("http")
-      ? contact.github
-      : `https://${contact.github}`;
+    const githubValue = contact.github.replace(/^@/, "");
+    const url = githubValue.startsWith("http")
+      ? githubValue
+      : githubValue.includes("/")
+        ? `https://${githubValue}`
+        : `https://github.com/${githubValue}`;
     links.push({ label: "GitHub", href: url, external: true });
   }
   if (contact.website) {

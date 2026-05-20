@@ -1,30 +1,40 @@
 import type { ResumeData } from "@/types/resume";
 import {
-  parseContactLine,
-  parseSkillLines,
+  mergeContactLines,
+  parseChallenge,
+  parseEducationEntries,
   parseExperience,
   parseProjects,
-  parseEducationEntries,
-  parseChallenge,
+  parseSkillLines,
 } from "./parseHelpers";
 
 /** Known section header names (case-insensitive exact match) */
 const SECTION_NAMES = new Set([
-  "skills", "experience", "projects", "education",
-  "summary", "challenge",
+  "skills",
+  "experience",
+  "projects",
+  "education",
+  "summary",
+  "challenge",
 ]);
 
 /** Multi-word headers matched with startsWith */
 const SECTION_PREFIXES = ["how i solved"];
 
 function isSectionHeader(line: string): boolean {
-  const t = line.trim().toLowerCase().replace(/:+\s*$/, "");
+  const t = line
+    .trim()
+    .toLowerCase()
+    .replace(/:+\s*$/, "");
   if (SECTION_NAMES.has(t)) return true;
-  return SECTION_PREFIXES.some((p) => t === p || t.startsWith(p + " "));
+  return SECTION_PREFIXES.some((p) => t === p || t.startsWith(`${p} `));
 }
 
 function normalizeSectionName(line: string): string {
-  return line.trim().toLowerCase().replace(/:+\s*$/, "");
+  return line
+    .trim()
+    .toLowerCase()
+    .replace(/:+\s*$/, "");
 }
 
 export type ResumeSection = {
@@ -75,9 +85,13 @@ export function parseResumeText(text: string): ResumeData {
   // NAME — first non-empty line
   const name = nonEmptyLines[0] ?? "";
 
-  // CONTACT — second non-empty line (pipe-separated)
-  const contactLine = nonEmptyLines[1] ?? "";
-  const contact = parseContactLine(contactLine);
+  // CONTACT - top lines before the first section may include email/phone/links
+  const firstSectionIndex = nonEmptyLines.findIndex(isSectionHeader);
+  const headerLines =
+    firstSectionIndex === -1
+      ? nonEmptyLines.slice(1, 5)
+      : nonEmptyLines.slice(1, firstSectionIndex);
+  const contact = mergeContactLines(headerLines);
 
   // Parse the rest into sections
   const sections = parseResumeSections(text);
@@ -113,6 +127,9 @@ export function parseResumeText(text: string): ResumeData {
     }
   }
 
-  console.log("[parseResumeText] PARSED RESUME:", JSON.stringify(data, null, 2));
+  console.log(
+    "[parseResumeText] PARSED RESUME:",
+    JSON.stringify(data, null, 2),
+  );
   return data;
 }

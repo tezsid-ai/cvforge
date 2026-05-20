@@ -23,6 +23,25 @@ export default function ResumeTemplate({
         </TemplateSection>
       )}
 
+      {data.skills.length > 0 && (
+        <TemplateSection title="Skills">
+          <p>{data.skills.join(", ")}</p>
+        </TemplateSection>
+      )}
+
+      {data.education.length > 0 && (
+        <TemplateSection title="Education">
+          {data.education.map((entry, i) => (
+            <div key={i} className="mb-2 last:mb-0">
+              <p className="font-semibold text-gray-900">{entry.institution}</p>
+              {entry.degree && <p className="text-gray-700">{entry.degree}</p>}
+              {entry.duration && <p className="text-xs text-gray-500">{entry.duration}</p>}
+              {entry.grade && <p className="text-xs text-gray-500">{entry.grade}</p>}
+            </div>
+          ))}
+        </TemplateSection>
+      )}
+
       {data.experience.length > 0 && (
         <TemplateSection title="Experience">
           {data.experience.map((entry, i) => (
@@ -40,25 +59,6 @@ export default function ResumeTemplate({
               )}
             </div>
           ))}
-        </TemplateSection>
-      )}
-
-      {data.education.length > 0 && (
-        <TemplateSection title="Education">
-          {data.education.map((entry, i) => (
-            <div key={i} className="mb-2 last:mb-0">
-              <p className="font-semibold text-gray-900">{entry.institution}</p>
-              {entry.degree && <p className="text-gray-700">{entry.degree}</p>}
-              {entry.duration && <p className="text-xs text-gray-500">{entry.duration}</p>}
-              {entry.grade && <p className="text-xs text-gray-500">{entry.grade}</p>}
-            </div>
-          ))}
-        </TemplateSection>
-      )}
-
-      {data.skills.length > 0 && (
-        <TemplateSection title="Skills">
-          <p>{data.skills.join(", ")}</p>
         </TemplateSection>
       )}
 

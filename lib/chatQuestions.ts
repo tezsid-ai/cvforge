@@ -278,12 +278,6 @@ export function buildQuestions({
       field: "linkedin",
     },
     {
-      id: "role",
-      question: "Confirm your target role/title.",
-      type: "text",
-      field: "jobRole",
-    },
-    {
       id: "experience",
       question: "How many years of experience do you have?",
       type: "experience",
@@ -510,7 +504,8 @@ export function buildQuestions({
   ) {
     questions.push({
       id: "portfolio",
-      question: "Share your portfolio(if not provided) or case study links (if applicable).",
+      question:
+        "Share your portfolio(if not provided) or case study links (if applicable).",
       type: "text",
       field: "portfolio",
     });
