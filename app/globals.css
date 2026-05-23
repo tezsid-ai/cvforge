@@ -25,6 +25,19 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Force pointer cursor on all clickable elements globally */
+button,
+a,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="button"],
+input[type="submit"],
+[role="button"],
+nav * {
+  cursor: pointer !important;
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -56,12 +69,21 @@ body {
     display: none !important;
   }
 
+  @page {
+    margin: 0;
+    size: A4;
+  }
+
   body {
+    margin: 0;
+    padding: 0;
     background: #ffffff !important;
     color: #000000 !important;
   }
 
-  @page {
-    margin: 0;
+  main {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 }

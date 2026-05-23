@@ -38,7 +38,11 @@ export default function ChallengeForm({
         throw new Error(data.error ?? "Failed");
       }
 
-      onComplete({ problem: data.problem, action: data.action, result: data.result });
+      onComplete({
+        problem: data.problem,
+        action: data.action,
+        result: data.result,
+      });
     } catch {
       setError("Could not enhance the challenge. Please try again.");
     } finally {
@@ -52,7 +56,8 @@ export default function ChallengeForm({
         One Last Thing — Stand Out From The Crowd
       </h2>
       <p className="mt-1.5 text-sm text-zinc-400">
-        Tell us about a real challenge you solved. AI will make it sound impressive.
+        Tell us about a real challenge you solved. AI will make it sound
+        impressive.
       </p>
 
       <textarea
@@ -78,7 +83,9 @@ export default function ChallengeForm({
         <button
           type="button"
           disabled={!text.trim() || loading}
-          onClick={() => { void handleSubmit(); }}
+          onClick={() => {
+            void handleSubmit();
+          }}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (

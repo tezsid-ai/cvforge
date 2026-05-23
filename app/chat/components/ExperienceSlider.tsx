@@ -24,7 +24,10 @@ export default function ExperienceSlider({
       />
       <div className="flex justify-between text-xs text-zinc-400">
         {EXPERIENCE_LEVELS.map((lvl) => (
-          <span key={lvl.value} className={lvl.value === index ? "font-bold text-violet-300" : ""}>
+          <span
+            key={lvl.value}
+            className={lvl.value === index ? "font-bold text-violet-300" : ""}
+          >
             {lvl.label}
           </span>
         ))}

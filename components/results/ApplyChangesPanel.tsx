@@ -70,9 +70,7 @@ export default function ApplyChangesPanel({
   };
 
   if (showChallenge) {
-    return (
-      <ChallengeForm onComplete={handleChallenge} onSkip={handleSkip} />
-    );
+    return <ChallengeForm onComplete={handleChallenge} onSkip={handleSkip} />;
   }
 
   return (
@@ -81,7 +79,9 @@ export default function ApplyChangesPanel({
         type="button"
         disabled={applyLoading}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-violet-500 to-indigo-500 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-        onClick={() => { void onApplyAll(); }}
+        onClick={() => {
+          void onApplyAll();
+        }}
       >
         {applyLoading ? (
           <>

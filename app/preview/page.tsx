@@ -17,7 +17,6 @@ function isResumeDataShape(value: unknown): value is ResumeData {
 }
 
 function resolveResumeData(raw: string): ResumeData {
-  // Case 2: Try JSON first
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (isResumeDataShape(parsed)) {
@@ -28,7 +27,6 @@ function resolveResumeData(raw: string): ResumeData {
     // Not JSON — fall through to plain text parsing
   }
 
-  // Case 3: Plain text
   console.log("[Preview] Parsing as plain text");
   return parseResumeText(raw);
 }
@@ -37,6 +35,10 @@ export default function PreviewPage(): React.JSX.Element {
   const router = useRouter();
   const [data, setData] = useState<ResumeData | null>(null);
   const [state, setState] = useState<PageState>("loading");
+  const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
+  const [githubUrl, setGithubUrl] = useState<string | null>(null);
+  const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
+  const [otherLinks, setOtherLinks] = useState<string[] | null>(null);
   const [backTarget, setBackTarget] = useState({
     href: "/results",
     label: "Back to Results",
@@ -49,6 +51,27 @@ export default function PreviewPage(): React.JSX.Element {
     const source = sessionStorage.getItem("resumeSource");
     if (source === "chat") {
       setBackTarget({ href: "/chat", label: "Back to Builder" });
+    }
+
+    const analysisResultRaw = sessionStorage.getItem("analysisResult");
+    if (analysisResultRaw) {
+      try {
+        const parsed = JSON.parse(analysisResultRaw);
+        if (parsed.linkedinUrl) {
+          setLinkedinUrl(parsed.linkedinUrl);
+        }
+        if (parsed.githubUrl) {
+          setGithubUrl(parsed.githubUrl);
+        }
+        if (parsed.portfolioUrl) {
+          setPortfolioUrl(parsed.portfolioUrl);
+        }
+        if (parsed.otherLinks) {
+          setOtherLinks(parsed.otherLinks);
+        }
+      } catch (e) {
+        console.error("Failed to parse analysisResult for URLs", e);
+      }
     }
 
     // Case 1: Nothing stored
@@ -94,14 +117,20 @@ export default function PreviewPage(): React.JSX.Element {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] px-6 py-10 sm:px-10 print:bg-white print:p-0">
-      <section className="no-print mx-auto mb-6 flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
+      <section className="no-print print:hidden mx-auto mb-6 flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
         <BackButton href={backTarget.href} label={backTarget.label} size="sm" />
         <h1 className="text-2xl font-bold text-white sm:text-3xl">
           Your Optimized Resume
         </h1>
         <DownloadButton />
       </section>
-      <ResumeTemplate data={data} />
+      <ResumeTemplate
+        data={data}
+        linkedinUrl={linkedinUrl}
+        githubUrl={githubUrl}
+        portfolioUrl={portfolioUrl}
+        otherLinks={otherLinks}
+      />
     </main>
   );
 }

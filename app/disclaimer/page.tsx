@@ -67,7 +67,7 @@ export default function DisclaimerPage(): React.JSX.Element {
           href="/"
           className="mb-8 inline-flex text-sm font-medium text-violet-200 transition hover:text-white"
         >
-         &larr; Back to home
+          &larr; Back to home
         </Link>
 
         <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6 shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-10">

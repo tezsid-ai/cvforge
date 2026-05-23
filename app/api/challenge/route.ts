@@ -16,7 +16,10 @@ function parseResponse(raw: string): {
   action: string;
   result: string;
 } {
-  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = raw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   let problem = "";
   let action = "";
   let result = "";

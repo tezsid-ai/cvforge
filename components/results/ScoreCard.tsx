@@ -4,8 +4,14 @@ type ScoreCardProps = {
 };
 
 function getColor(score: number) {
-  if (score <= 40) return { ring: "#ef4444", text: "text-red-400", bg: "stroke-red-500" };
-  if (score <= 70) return { ring: "#eab308", text: "text-yellow-300", bg: "stroke-yellow-500" };
+  if (score <= 40)
+    return { ring: "#ef4444", text: "text-red-400", bg: "stroke-red-500" };
+  if (score <= 70)
+    return {
+      ring: "#eab308",
+      text: "text-yellow-300",
+      bg: "stroke-yellow-500",
+    };
   return { ring: "#22c55e", text: "text-green-400", bg: "stroke-green-500" };
 }
 
@@ -30,8 +36,26 @@ export default function ScoreCard({
     return (
       <div className="flex items-center gap-2">
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#27272a" strokeWidth={strokeWidth} />
-          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" className={bg} strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#27272a"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            className={bg}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: "stroke-dashoffset 0.8s ease" }}
+          />
         </svg>
         <span className={`text-sm font-bold ${text}`}>{score}%</span>
       </div>
@@ -43,16 +67,38 @@ export default function ScoreCard({
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8">
         <div className="relative flex-shrink-0">
           <svg width={size} height={size} className="-rotate-90">
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#27272a" strokeWidth={strokeWidth} />
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" className={bg} strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="#27272a"
+              strokeWidth={strokeWidth}
+            />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              className={bg}
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              style={{ transition: "stroke-dashoffset 0.8s ease" }}
+            />
           </svg>
-          <span className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${text}`}>
+          <span
+            className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${text}`}
+          >
             {score}%
           </span>
         </div>
         <div>
           <p className="text-sm text-zinc-300">
-            Your resume matches <span className={`font-semibold ${text}`}>{score}%</span> of the job description
+            Your resume matches{" "}
+            <span className={`font-semibold ${text}`}>{score}%</span> of the job
+            description
           </p>
           <p className={`mt-1 text-xs ${text}`}>{getMessage(score)}</p>
         </div>

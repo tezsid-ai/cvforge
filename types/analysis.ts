@@ -9,12 +9,46 @@ export type ExperienceInfo = {
   detected: number | null;
 };
 
+export type WeakPoint = {
+  section: string;
+  issue: string;
+  fix: string;
+};
+
+export type ReframingSuggestion = {
+  current: string;
+  reframed: string;
+};
+
+export type RecommendedAddition = {
+  type: string;
+  suggestion: string;
+  reason: string;
+};
+
+export type SectionScores = {
+  summary: number;
+  experience: number;
+  skills: number;
+  education: number;
+};
+
 export type AnalysisResult = {
   matchScore: number;
+  atsVerdict?: string;
   missingKeywords: string[];
   matchedKeywords?: string[];
   experience?: ExperienceInfo;
+  sectionScores?: SectionScores;
+  weakPoints?: WeakPoint[];
+  interviewRisks?: string[];
+  reframingSuggestions?: ReframingSuggestion[];
   improvements: ImprovementItem[];
+  recommendedAdditions?: RecommendedAddition[];
+  linkedinUrl?: string | null;
+  githubUrl?: string | null;
+  portfolioUrl?: string | null;
+  otherLinks?: string[] | null;
 };
 
 export function isAnalysisResult(value: unknown): value is AnalysisResult {

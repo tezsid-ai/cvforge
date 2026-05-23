@@ -12,6 +12,7 @@ export default function ResumeView({
 
   return (
     <section
+      className="print:block print:p-[20mm] print:m-0 print:border-none! print:shadow-none!"
       style={{
         maxWidth: "48rem",
         width: "100%",

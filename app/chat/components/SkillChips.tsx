@@ -52,11 +52,17 @@ export default function SkillChips({
           type="text"
           value={custom}
           onChange={(e) => setCustom(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustom())}
+          onKeyDown={(e) =>
+            e.key === "Enter" && (e.preventDefault(), addCustom())
+          }
           placeholder="Add custom skill..."
           className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-violet-500"
         />
-        <button type="button" onClick={addCustom} className="rounded-lg bg-zinc-700 px-3 py-2 text-xs text-white hover:bg-zinc-600">
+        <button
+          type="button"
+          onClick={addCustom}
+          className="rounded-lg bg-zinc-700 px-3 py-2 text-xs text-white hover:bg-zinc-600"
+        >
           Add
         </button>
       </div>

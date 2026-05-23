@@ -1,25 +1,26 @@
 "use client";
 
 import type { ImprovementItem } from "@/types/analysis";
+import { Check } from "lucide-react";
 
 type ImprovementCardProps = {
   item: ImprovementItem;
   index: number;
-  applied: boolean;
-  onApply: () => void;
+  selected: boolean;
+  onToggle: () => void;
 };
 
 export default function ImprovementCard({
   item,
   index,
-  applied,
-  onApply,
+  selected,
+  onToggle,
 }: ImprovementCardProps): React.JSX.Element {
   return (
     <article
       className={`animate-fade-in-up rounded-2xl border p-5 transition-all duration-300 ${
-        applied
-          ? "border-green-400/30 bg-green-500/5 opacity-70"
+        selected
+          ? "border-emerald-500/25 bg-emerald-500/5"
           : "border-white/10 bg-zinc-900/60"
       }`}
       style={{ animationDelay: `${index * 70}ms` }}
@@ -44,22 +45,28 @@ export default function ImprovementCard({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs text-zinc-400">
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <p className="text-xs text-zinc-400 leading-relaxed">
           <span className="font-semibold text-zinc-300">Why?</span>{" "}
           {item.reason}
         </p>
         <button
           type="button"
-          disabled={applied}
-          onClick={onApply}
-          className={`ml-4 flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-            applied
-              ? "bg-green-600/20 text-green-300"
+          onClick={onToggle}
+          className={`flex-shrink-0 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            selected
+              ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
               : "bg-violet-600 text-white hover:bg-violet-500"
           }`}
         >
-          {applied ? "✓ Applied" : "Apply This"}
+          {selected ? (
+            <>
+              <Check className="h-3 w-3 text-emerald-300 shrink-0" />
+              Applied
+            </>
+          ) : (
+            "Apply This"
+          )}
         </button>
       </div>
     </article>

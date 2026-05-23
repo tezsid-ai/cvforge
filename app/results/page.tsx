@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import ImprovementCard from "@/components/results/ImprovementCard";
 import KeywordChips from "@/components/results/KeywordChips";
-import ScoreCard from "@/components/results/ScoreCard";
 import ResultsHeader from "@/components/results/ResultsHeader";
-import ChallengeForm from "@/components/challenge/ChallengeForm";
+import AtsScoreSection from "@/components/results/AtsScoreSection";
+import WeakPointsList from "@/components/results/WeakPointsList";
+import ImprovementsSection from "@/components/results/ImprovementsSection";
+import RecommendedAdditionsList from "@/components/results/RecommendedAdditionsList";
 import BackButton from "@/components/ui/BackButton";
 import { isAnalysisResult, type AnalysisResult } from "@/types/analysis";
 
@@ -14,9 +15,10 @@ export default function ResultsPage(): React.JSX.Element {
   const router = useRouter();
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [applied, setApplied] = useState<Set<number>>(new Set());
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
+    new Set(),
+  );
   const [applyLoading, setApplyLoading] = useState(false);
-  const [showChallenge, setShowChallenge] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("analysisResult");
@@ -36,22 +38,34 @@ export default function ResultsPage(): React.JSX.Element {
     }
   }, []);
 
-  const markApplied = (i: number) => setApplied((prev) => new Set(prev).add(i));
+  const onToggleIndex = (i: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+      }
+      return next;
+    });
+  };
 
-  const onApplyAll = async () => {
-    if (!result || applyLoading) return;
+  const onApplySelected = async () => {
+    if (!result || applyLoading || selectedIndices.size === 0) return;
     const originalResume = sessionStorage.getItem("originalResume")?.trim();
     if (!originalResume) return;
 
     setApplyLoading(true);
-    const unapplied = result.improvements.filter((_, i) => !applied.has(i));
+    const selectedImprovements = result.improvements.filter((_, i) =>
+      selectedIndices.has(i),
+    );
     try {
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           originalResume,
-          improvements: unapplied.map(({ original, improved }) => ({
+          improvements: selectedImprovements.map(({ original, improved }) => ({
             original,
             improved,
           })),
@@ -61,12 +75,19 @@ export default function ResultsPage(): React.JSX.Element {
       if (!res.ok || !data.finalResume) throw new Error();
       sessionStorage.setItem("finalResume", data.finalResume);
       sessionStorage.setItem("resumeSource", "upload");
-      setShowChallenge(true);
+      router.push("/preview");
     } catch {
       /* error handled silently */
     } finally {
       setApplyLoading(false);
     }
+  };
+
+  const onContinueWithoutChanges = () => {
+    const originalResume = sessionStorage.getItem("originalResume") || "";
+    sessionStorage.setItem("finalResume", originalResume);
+    sessionStorage.setItem("resumeSource", "upload");
+    router.push("/preview");
   };
 
   if (loadError) {
@@ -95,71 +116,68 @@ export default function ResultsPage(): React.JSX.Element {
     );
   }
 
-  if (showChallenge) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-6 text-zinc-100">
-        <div className="w-full max-w-xl">
-          <ChallengeForm
-            onComplete={(c) => {
-              const existing = sessionStorage.getItem("finalResume") ?? "";
-              sessionStorage.setItem(
-                "finalResume",
-                `${existing}\n\nHow I Solved a Professional Challenge\nProblem: ${c.problem}\nAction: ${c.action}\nResult: ${c.result}`,
-              );
-              sessionStorage.setItem("resumeSource", "upload");
-              router.push("/preview");
-            }}
-            onSkip={() => {
-              sessionStorage.setItem("resumeSource", "upload");
-              router.push("/preview");
-            }}
-          />
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="relative min-h-screen bg-[#0a0a0a] text-zinc-100">
-      <ResultsHeader
-        score={result.matchScore}
-        onApplyAll={() => {
-          void onApplyAll();
-        }}
-        applyLoading={applyLoading}
-      />
+      <ResultsHeader score={result.matchScore} />
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-20 left-1/3 h-80 w-80 rounded-full bg-violet-500/20 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-indigo-500/15 blur-3xl" />
       </div>
-      <section className="relative z-10 mx-auto w-full max-w-5xl space-y-6 px-6 py-8 sm:px-10">
-        <ScoreCard score={result.matchScore} />
+      <section className="relative z-10 mx-auto w-full max-w-5xl space-y-8 px-6 py-8 sm:px-10">
+        {/* Section 1: ATS Score */}
+        <AtsScoreSection
+          score={result.matchScore}
+          atsVerdict={result.atsVerdict}
+          matchedCount={result.matchedKeywords?.length ?? 0}
+          missingCount={result.missingKeywords?.length ?? 0}
+        />
+
+        {/* Section 2: Missing Keywords */}
         <KeywordChips
           missingKeywords={result.missingKeywords}
           matchedKeywords={result.matchedKeywords ?? []}
         />
-        <section className="animate-fade-in-up rounded-2xl border border-white/10 bg-zinc-900/60 p-6">
-          <h2 className="text-lg font-semibold text-white">
-            Resume Improvements
-          </h2>
-          {result.improvements.length === 0 ? (
-            <p className="mt-3 text-sm text-zinc-300">
-              Your resume is already strong
-            </p>
-          ) : (
-            <div className="mt-4 space-y-4">
-              {result.improvements.map((item, i) => (
-                <ImprovementCard
-                  key={`${item.original}-${i}`}
-                  item={item}
-                  index={i}
-                  applied={applied.has(i)}
-                  onApply={() => markApplied(i)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+
+        {/* Section 3: Weak Points */}
+        <WeakPointsList weakPoints={result.weakPoints} />
+
+        {/* Section 4: Recommended Additions */}
+        <RecommendedAdditionsList additions={result.recommendedAdditions} />
+
+        {/* Section 5: Resume Improvements */}
+        <ImprovementsSection
+          improvements={result.improvements}
+          selectedIndices={selectedIndices}
+          onToggleIndex={onToggleIndex}
+        />
+
+        {/* Inline action buttons directly below improvements */}
+        <div className="flex items-center justify-between border-t border-white/10 pt-6">
+          <button
+            type="button"
+            onClick={onContinueWithoutChanges}
+            className="rounded-lg border border-zinc-700 bg-zinc-900/50 px-5 py-2.5 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800"
+          >
+            Continue without changes
+          </button>
+          <button
+            type="button"
+            disabled={applyLoading || selectedIndices.size === 0}
+            onClick={() => {
+              void onApplySelected();
+            }}
+            className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed"
+          >
+            {applyLoading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Applying Selected...
+              </>
+            ) : (
+              "Apply Selected Changes"
+            )}
+          </button>
+        </div>
       </section>
     </main>
   );
