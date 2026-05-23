@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import KeywordChips from "@/components/results/KeywordChips";
-import ResultsHeader from "@/components/results/ResultsHeader";
+import { useEffect, useState } from "react";
 import AtsScoreSection from "@/components/results/AtsScoreSection";
-import WeakPointsList from "@/components/results/WeakPointsList";
 import ImprovementsSection from "@/components/results/ImprovementsSection";
+import KeywordChips from "@/components/results/KeywordChips";
 import RecommendedAdditionsList from "@/components/results/RecommendedAdditionsList";
+import ResultsHeader from "@/components/results/ResultsHeader";
+import WeakPointsList from "@/components/results/WeakPointsList";
 import BackButton from "@/components/ui/BackButton";
-import { isAnalysisResult, type AnalysisResult } from "@/types/analysis";
+import { type AnalysisResult, isAnalysisResult } from "@/types/analysis";
 
 export default function ResultsPage(): React.JSX.Element {
   const router = useRouter();
@@ -77,7 +77,15 @@ export default function ResultsPage(): React.JSX.Element {
       sessionStorage.setItem("resumeSource", "upload");
       router.push("/preview");
     } catch {
-      /* error handled silently */
+      let fallbackResume = originalResume;
+      for (const imp of selectedImprovements) {
+        if (imp.original && imp.improved) {
+          fallbackResume = fallbackResume.replace(imp.original, imp.improved);
+        }
+      }
+      sessionStorage.setItem("finalResume", fallbackResume);
+      sessionStorage.setItem("resumeSource", "upload");
+      router.push("/preview");
     } finally {
       setApplyLoading(false);
     }
