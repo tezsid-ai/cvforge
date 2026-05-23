@@ -83,11 +83,33 @@ export default function ResultsPage(): React.JSX.Element {
     }
   };
 
-  const onContinueWithoutChanges = () => {
-    const originalResume = sessionStorage.getItem("originalResume") || "";
-    sessionStorage.setItem("finalResume", originalResume);
-    sessionStorage.setItem("resumeSource", "upload");
-    router.push("/preview");
+  const onContinueWithoutChanges = async () => {
+    if (!result || applyLoading) return;
+    const originalResume = sessionStorage.getItem("originalResume")?.trim();
+    if (!originalResume) return;
+
+    setApplyLoading(true);
+    try {
+      const res = await fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          originalResume,
+          improvements: [],
+        }),
+      });
+      const data = (await res.json()) as { finalResume?: string };
+      if (!res.ok || !data.finalResume) throw new Error();
+      sessionStorage.setItem("finalResume", data.finalResume);
+      sessionStorage.setItem("resumeSource", "upload");
+      router.push("/preview");
+    } catch {
+      sessionStorage.setItem("finalResume", originalResume);
+      sessionStorage.setItem("resumeSource", "upload");
+      router.push("/preview");
+    } finally {
+      setApplyLoading(false);
+    }
   };
 
   if (loadError) {
@@ -155,10 +177,13 @@ export default function ResultsPage(): React.JSX.Element {
         <div className="flex items-center justify-between border-t border-white/10 pt-6">
           <button
             type="button"
-            onClick={onContinueWithoutChanges}
-            className="rounded-lg border border-zinc-700 bg-zinc-900/50 px-5 py-2.5 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800"
+            disabled={applyLoading}
+            onClick={() => {
+              void onContinueWithoutChanges();
+            }}
+            className="rounded-lg border border-zinc-700 bg-zinc-900/50 px-5 py-2.5 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue without changes
+            {applyLoading ? "Processing..." : "Continue without changes"}
           </button>
           <button
             type="button"

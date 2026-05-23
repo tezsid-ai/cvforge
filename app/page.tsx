@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { FileText, Sparkles } from "lucide-react";
 
 type CtaCard = {
   href: string;
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
 };
@@ -10,13 +11,13 @@ type CtaCard = {
 const ctaCards: CtaCard[] = [
   {
     href: "/upload",
-    icon: "📄",
+    icon: <FileText className="h-6 w-6 text-white" />,
     title: "I Already Have a Resume",
     description: "Upload your current resume and let AI sharpen every line.",
   },
   {
     href: "/chat",
-    icon: "✨",
+    icon: <Sparkles className="h-6 w-6 text-white" />,
     title: "Build From Scratch",
     description: "Start from zero and craft a standout resume in minutes.",
   },
@@ -53,8 +54,8 @@ export default function Home(): React.JSX.Element {
               href={card.href}
               className="group rounded-2xl border border-white/10 bg-zinc-900/60 p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/70 hover:shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_14px_45px_rgba(79,70,229,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
             >
-              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-indigo-500 text-2xl shadow-lg shadow-indigo-500/25">
-                <span aria-hidden="true">{card.icon}</span>
+              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-indigo-500 shadow-lg shadow-indigo-500/25">
+                {card.icon}
               </div>
               <h2 className="text-xl font-semibold text-white">{card.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-zinc-300">
