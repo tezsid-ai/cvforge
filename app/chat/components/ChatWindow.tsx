@@ -2,68 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { analyzeJobDescription, buildQuestions } from "@/lib/chatQuestions";
+import { buildWithJdQuestions, buildWithoutJdQuestions } from "@/lib/chatQuestions";
+import { enhanceAnswer, enhanceChallenge, generateResume, parseChatLinks } from "../lib/chatApi";
 import ChatBubble from "./ChatBubble";
 import QuestionRenderer from "./QuestionRenderer";
 
 type Message = { sender: "ai" | "user"; text: string };
 type ChatWindowProps = { jobDescription: string; mode: "withJd" | "scratch" };
-
-async function enhanceAnswer(
-  answer: string,
-  field: string,
-  jd: string,
-): Promise<string> {
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answer, field, jobDescription: jd || undefined }),
-    });
-    const data = (await res.json()) as { enhanced?: string };
-    return data.enhanced ?? answer;
-  } catch {
-    return answer;
-  }
-}
-
-async function enhanceChallenge(text: string): Promise<string> {
-  try {
-    const res = await fetch("/api/challenge", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ challengeText: text }),
-    });
-    const data = (await res.json()) as {
-      problem?: string;
-      action?: string;
-      result?: string;
-    };
-    if (data.problem) {
-      return `Problem: ${data.problem}\nAction: ${data.action}\nResult: ${data.result}`;
-    }
-    return text;
-  } catch {
-    return text;
-  }
-}
-
-async function generateResume(
-  resumeData: Record<string, string>,
-  jd: string,
-): Promise<string | null> {
-  try {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resumeData, jobDescription: jd || undefined }),
-    });
-    const data = (await res.json()) as { finalResume?: string };
-    return data.finalResume ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export default function ChatWindow({
   jobDescription,
@@ -74,12 +19,11 @@ export default function ChatWindow({
   const [messages, setMessages] = useState<Message[]>([]);
   const [resumeData, setResumeData] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
-  const [jdContext, setJdContext] = useState(jobDescription);
-  const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
-  const [questions, setQuestions] = useState(() =>
-    buildQuestions({ mode, jobDescription: jobDescription }),
-  );
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const questions = mode === "withJd"
+    ? buildWithJdQuestions(jobDescription)
+    : buildWithoutJdQuestions();
 
   const scrollDown = useCallback(() => {
     setTimeout(
@@ -89,48 +33,10 @@ export default function ChatWindow({
   }, []);
 
   useEffect(() => {
-    setJdContext(jobDescription);
-  }, [jobDescription]);
-
-  useEffect(() => {
-    setQuestions(buildQuestions({ mode, jobDescription: jdContext }));
-  }, [mode, jdContext]);
-
-  useEffect(() => {
-    if (mode !== "withJd") {
-      setBlockedMessage(null);
-      return;
-    }
-
-    const trimmed = jdContext.trim();
-    if (!trimmed) {
-      setBlockedMessage("Please provide a tech job description to continue.");
-      return;
-    }
-
-    const analysis = analyzeJobDescription(trimmed);
-    if (analysis.bucket === "non-tech" || analysis.bucket === "unknown") {
-      setBlockedMessage(
-        "This flow is optimized for tech roles only. Please provide a tech job description to continue.",
-      );
-      return;
-    }
-
-    setBlockedMessage(null);
-  }, [mode, jdContext]);
-
-  useEffect(() => {
-    if (blockedMessage) {
-      setMessages([{ sender: "ai", text: blockedMessage }]);
-      setStep(0);
-      setProcessing(false);
-      return;
-    }
-
     if (messages.length === 0 && questions.length > 0) {
-      setMessages([{ sender: "ai", text: questions[0].question }]);
+      setMessages([{ sender: "ai", text: questions[0].label }]);
     }
-  }, [blockedMessage, messages.length, questions]);
+  }, [messages.length, questions]);
 
   useEffect(scrollDown, [messages, scrollDown]);
 
@@ -141,88 +47,46 @@ export default function ChatWindow({
     setMessages((prev) => [...prev, { sender: "user", text: answer }]);
     setProcessing(true);
 
+    let enhanced = answer;
     const enhanceFields = new Set([
       "workExperience",
       "projects",
       "education",
-      "designProcess",
-      "designTools",
-      "dataTools",
-      "devopsTools",
-      "testingTools",
-      "securityProjects",
-      "securityTools",
-      "certifications",
+      "skills",
+      "summary",
+      "achievements",
     ]);
-    let enhanced: string;
 
-    if (q.field === "jobDescription") {
-      const analysis = analyzeJobDescription(answer);
-      if (analysis.bucket === "non-tech" || analysis.bucket === "unknown") {
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            text: "This flow is optimized for tech roles only. Please provide a tech job description.",
-          },
-          { sender: "ai", text: q.question },
-        ]);
-        setProcessing(false);
-        setJdContext("");
-        return;
-      }
-      enhanced = answer;
-      const trimmed = answer.trim();
-      setJdContext(trimmed);
-      const nextQuestions = buildQuestions({ mode, jobDescription: trimmed });
-      setQuestions(nextQuestions);
-      setStep(0);
-      setProcessing(false);
-      if (nextQuestions.length > 0) {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "ai", text: nextQuestions[0].question },
-        ]);
-      }
-      return;
-    } else if (q.field === "challenge") {
+    if (q.id === "challenge") {
       enhanced = await enhanceChallenge(answer);
-    } else if (!enhanceFields.has(q.field)) {
-      enhanced = answer;
-    } else {
-      enhanced = await enhanceAnswer(answer, q.field, jdContext);
+    } else if (enhanceFields.has(q.id)) {
+      enhanced = await enhanceAnswer(answer, q.id, mode === "withJd" ? jobDescription : "");
     }
 
-    if (q.field !== "jobDescription") {
-      setResumeData((prev) => ({ ...prev, [q.field]: enhanced }));
-    }
+    setResumeData((prev) => ({ ...prev, [q.id]: enhanced }));
     const nextStep = step + 1;
 
     if (nextStep < questions.length) {
       setMessages((prev) => [
         ...prev,
-        { sender: "ai", text: questions[nextStep].question },
+        { sender: "ai", text: questions[nextStep].label },
       ]);
       setStep(nextStep);
       setProcessing(false);
     } else {
       setMessages((prev) => [
         ...prev,
-        { sender: "ai", text: "Generating your resume... ✨" },
+        { sender: "ai", text: "Generating your optimized resume... ✨" },
       ]);
-      const allData =
-        q.field === "jobDescription"
-          ? { ...resumeData }
-          : { ...resumeData, [q.field]: enhanced };
-      if (allData.linkedin) {
-        const contactPrefix = allData.contact ? `${allData.contact} | ` : "";
-        allData.contact = `${contactPrefix}LinkedIn: ${allData.linkedin}`;
-      }
-      const resume = await generateResume(allData, jdContext);
+      
+      const allData = { ...resumeData, [q.id]: enhanced };
+      const links = parseChatLinks(allData.links || allData.linkedin || "");
+      const resume = await generateResume(allData, mode === "withJd" ? jobDescription : "");
 
       if (resume) {
         sessionStorage.setItem("finalResume", resume);
         sessionStorage.setItem("resumeSource", "chat");
+        sessionStorage.setItem("analysisResult", JSON.stringify(links));
         router.push("/preview");
       } else {
         setMessages((prev) => [
@@ -234,32 +98,43 @@ export default function ChatWindow({
     }
   };
 
-  const currentQ = blockedMessage ? null : (questions[step] ?? null);
+  const currentQ = questions[step] ?? null;
 
   return (
-    <div className="mx-auto flex h-[calc(80vh)] w-full max-w-2xl flex-col">
-      <div className="flex-1 overflow-y-auto px-4 py-6 hide-scrollbar">
+    <div className="mx-auto flex h-[calc(80vh)] w-full max-w-2xl flex-col bg-zinc-950/80 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden animate-fade-in">
+      <div className="border-b border-zinc-800 bg-zinc-900/50 px-4 py-3 flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          AI Chat Builder
+        </span>
+        <span className="text-xs font-medium text-violet-400">
+          Question {Math.min(step + 1, questions.length)} of {questions.length}
+        </span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-6 hide-scrollbar space-y-4">
         {messages.map((msg, i) => (
           <ChatBubble key={i} sender={msg.sender} text={msg.text} />
         ))}
-        <div ref={bottomRef} />
-      </div>
-      <div className="border-t border-zinc-800 px-4 py-4">
-        {currentQ && !processing ? (
-          <QuestionRenderer
-            type={currentQ.type}
-            onAnswer={(val) => {
-              void handleAnswer(val);
-            }}
-            disabled={processing}
-            meta={currentQ.meta}
-          />
-        ) : (
-          <div className="flex items-center justify-center py-3">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-600 border-t-violet-400" />
-            <span className="ml-2 text-sm text-zinc-400">Processing...</span>
+        {processing && (
+          <div className="flex items-center space-x-2 text-zinc-500 pl-4 py-2">
+            <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400" />
+            <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400 [animation-delay:0.2s]" />
+            <span className="h-2 w-2 animate-bounce rounded-full bg-violet-400 [animation-delay:0.4s]" />
           </div>
         )}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="border-t border-zinc-800 bg-zinc-900/30 px-4 py-4">
+        {currentQ && !processing ? (
+          <QuestionRenderer
+            question={currentQ}
+            onAnswer={handleAnswer}
+            disabled={processing}
+          />
+        ) : !currentQ && !processing ? (
+          <div className="text-center py-2 text-sm text-zinc-500">All set!</div>
+        ) : null}
       </div>
     </div>
   );

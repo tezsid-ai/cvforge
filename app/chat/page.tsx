@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles, ClipboardList } from "lucide-react";
 import ChatWindow from "./components/ChatWindow";
 import BackButton from "@/components/ui/BackButton";
 
@@ -64,11 +65,6 @@ export default function ChatPage(): React.JSX.Element {
             className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition focus:border-violet-500"
           />
           <div className="flex gap-3">
-            {/* <BackButton
-              onClick={() => setMode("landing")}
-              label="Back"
-              className="rounded-xl border border-zinc-700 bg-transparent text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 hover:shadow-none"
-            /> */}
             <button
               type="button"
               disabled={!jd.trim()}
@@ -90,13 +86,10 @@ export default function ChatPage(): React.JSX.Element {
         <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
       <div className="relative z-10 w-full max-w-3xl animate-fade-in-up space-y-6 text-center">
-        {/* <div className="flex justify-center">
-          <BackButton href="/" label="Back to Home" size="sm" />
-        </div> */}
         <section className="space-y-8">
           <div>
-            <span className="mb-4 inline-flex rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1 text-sm font-medium text-violet-200">
-              ✨ Build From Scratch
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1 text-sm font-medium text-violet-200">
+              <Sparkles className="h-3.5 w-3.5 text-violet-300" /> Build From Scratch
             </span>
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
               How do you want to start?
@@ -111,8 +104,8 @@ export default function ChatPage(): React.JSX.Element {
               }}
               className="group rounded-2xl border border-white/10 bg-zinc-900/60 p-7 text-left backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/70 hover:shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_14px_45px_rgba(79,70,229,0.28)]"
             >
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 text-2xl shadow-lg shadow-indigo-500/25">
-                📋
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-lg shadow-indigo-500/25">
+                <ClipboardList className="h-6 w-6" />
               </div>
               <h2 className="text-lg font-semibold text-white">
                 I Have a Job Description
@@ -130,8 +123,8 @@ export default function ChatPage(): React.JSX.Element {
               }}
               className="group rounded-2xl border border-white/10 bg-zinc-900/60 p-7 text-left backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/70 hover:shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_14px_45px_rgba(79,70,229,0.28)]"
             >
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 text-2xl shadow-lg shadow-indigo-500/25">
-                ✨
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-lg shadow-indigo-500/25">
+                <Sparkles className="h-6 w-6" />
               </div>
               <h2 className="text-lg font-semibold text-white">
                 Start From Scratch

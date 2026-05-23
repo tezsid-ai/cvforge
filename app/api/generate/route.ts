@@ -1,137 +1,82 @@
 import { NextResponse } from "next/server";
 import { generateContent } from "@/lib/gemini";
+import { stripFences, buildFallbackResume } from "./helpers";
 
 type GenerateBody = {
   resumeData: Record<string, string>;
   jobDescription?: string;
 };
 
-const SYSTEM_PROMPT = `You are a professional resume writer. Build a complete, well-structured resume using only the user's provided data. Return it as plain structured text with clear section headers.
+const SYSTEM_PROMPT = `You are a senior professional resume writer. Your job is to transform raw user-provided information into a polished, ATS-optimized resume.
 
-Strict data rules:
-- Do not invent technologies, tools, companies, degrees, dates, metrics, links, achievements, certifications, or experience.
-- Use only details present in Resume Data.
-- Use the Target Job Description only for tone and ordering. Do not add job-description skills to the resume unless the user also provided them in Resume Data.
-- If a section has no user-provided data, do not show that section.
-- If a field is vague, improve wording only from the given facts. Do not add new facts.
+CRITICAL RULES:
+- Never output markdown syntax. No **, no *, no #, no backticks, no bullet dashes with spaces. Plain text only.
+- Never dump the user's raw conversational answers. Always rewrite them into professional resume language.
+- Never invent companies, roles, technologies, dates, or achievements not present in the input data.
+- If a section has no data or the user wrote "None", skip that section entirely — do not render it.
+- Never duplicate content across sections.
 
-Use these sections in order only when they have data:
-1. Full name and contact info at the top
-2. Summary (1-2 sentences based only on provided role, experience, skills, education, or project data)
-3. Skills (comma separated)
-4. Experience (with bullet points only, no paragraphs)
-5. Projects (with bullet points only, no paragraphs)
-6. Education
-7. Certifications or achievements, only if provided
-8. How I Solved a Professional Challenge (Problem / Action / Result), only if provided
+OUTPUT FORMAT — follow this exact structure:
 
-For Experience and Projects:
-- Show a short title line first.
-- Then add 3-5 bullet points.
-- Every detail must be point-wise.
-- Do not write theory-style paragraphs.
-- Do not merge the whole project or experience into one paragraph.
+[FULL NAME]
+[email] | [phone] | [LinkedIn URL] | [GitHub URL] | [Portfolio URL]
+(only include contact items that are actually provided — skip nulls)
 
-No JSON. No markdown. No backticks. Just clean resume text with proper sections.`;
+SUMMARY
+Write a 2-3 sentence professional summary based on the user's target role, experience level, and skills. Make it specific to their domain. Do not use generic filler phrases.
 
-function stripFences(text: string): string {
+SKILLS
+List skills as comma-separated values grouped by category. Example:
+Languages: JavaScript, TypeScript, Python
+Frameworks: React, Next.js, Express
+Tools: Git, Docker, Figma
+Databases: MongoDB, PostgreSQL
+Do not write skills as a paragraph. Do not use bullet points for skills. Group them by category relevant to the user's domain.
+
+EXPERIENCE
+For each work experience or internship:
+[Job Title] — [Company Name] | [Duration]
+- [Strong action verb] + [what was done] + [outcome or impact if available]
+- Maximum 3-4 bullet points per role
+- Rewrite conversational input into professional language
+- If no work experience exists, skip this section entirely
+
+PROJECTS
+For each project:
+[Project Name] | [Tech Stack]
+- [Strong action verb] + [what was built] + [key feature or outcome]
+- Maximum 3 bullet points per project
+- Rewrite conversational input into professional language
+- Extract tech stack from user's answer even if mentioned casually
+
+EDUCATION
+[Degree], [Institution] | [Year]
+[Secondary if provided]
+
+ACHIEVEMENTS
+Only include if user provided certifications, awards, hackathons, or leadership roles.
+Skip entirely if empty or "None".
+
+STRICT FORMATTING RULES:
+- No markdown. No **bold**. No *italic*. No # headers. No backticks.
+- Section headers must be in ALL CAPS on their own line.
+- Bullet points use a simple dash: -
+- One blank line between sections.
+- No sub-headers like "Relevant Experience" or "Key Projects" — just the section name.
+- No numbered lists anywhere.
+- Skills must be comma-separated by category, never a paragraph.
+- Return only the resume. No explanation, no preamble, no closing remarks.`;
+
+const stripMarkdown = (text: string): string => {
   return text
-    .trim()
-    .replace(/^```(?:json|text|plain)?\s*/i, "")
-    .replace(/\s*```\s*$/, "")
+    .replace(/\*\*(.*?)\*\*/g, '$1')     // bold
+    .replace(/\*(.*?)\*/g, '$1')          // italic
+    .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // code
+    .replace(/^#+\s/gm, '')              // headers
+    .replace(/^>\s/gm, '')               // blockquotes
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // markdown links → plain text
     .trim();
-}
-
-function toBulletLines(value: string): string[] {
-  return value
-    .split(/\r?\n|(?<=\.)\s+(?=[A-Z])/)
-    .map((item) => item.replace(/^[-*]\s*/, "").trim())
-    .filter(Boolean)
-    .slice(0, 6)
-    .map((item) => `- ${item}`);
-}
-
-function getSkills(resumeData: Record<string, string>): string {
-  return (
-    resumeData.techSkills ||
-    resumeData.dataTools ||
-    resumeData.devopsTools ||
-    resumeData.testingTools ||
-    resumeData.designTools ||
-    resumeData.securityTools ||
-    ""
-  ).trim();
-}
-
-function buildSummary(resumeData: Record<string, string>): string {
-  const parts: string[] = [];
-  const role = resumeData.jobRole?.trim();
-  const experience = resumeData.experience?.trim();
-  const skills = getSkills(resumeData);
-
-  if (role) parts.push(role);
-  if (experience) parts.push(`${experience} experience`);
-  if (skills) parts.push(`skilled in ${skills}`);
-
-  return parts.length ? `${parts.join(" with ")}.` : "";
-}
-
-function buildFallbackResume(resumeData: Record<string, string>): string {
-  const lines: string[] = [];
-  const summary = buildSummary(resumeData);
-  const skills = getSkills(resumeData);
-
-  if (resumeData.name) lines.push(resumeData.name);
-  if (resumeData.contact) lines.push(resumeData.contact);
-  if (resumeData.location) lines.push(resumeData.location);
-  if (resumeData.jobRole) lines.push(`Target Role: ${resumeData.jobRole}`);
-
-  if (summary) {
-    lines.push("");
-    lines.push("SUMMARY");
-    lines.push(summary);
-  }
-
-  if (skills) {
-    lines.push("");
-    lines.push("SKILLS");
-    lines.push(skills);
-  }
-
-  if (resumeData.workExperience) {
-    lines.push("");
-    lines.push("EXPERIENCE");
-    lines.push("Relevant Experience");
-    lines.push(...toBulletLines(resumeData.workExperience));
-  }
-
-  if (resumeData.projects) {
-    lines.push("");
-    lines.push("PROJECTS");
-    lines.push("Key Project");
-    lines.push(...toBulletLines(resumeData.projects));
-  }
-
-  if (resumeData.education) {
-    lines.push("");
-    lines.push("EDUCATION");
-    lines.push(resumeData.education);
-  }
-
-  if (resumeData.certifications) {
-    lines.push("");
-    lines.push("CERTIFICATIONS");
-    lines.push(...toBulletLines(resumeData.certifications));
-  }
-
-  if (resumeData.challenge) {
-    lines.push("");
-    lines.push("HOW I SOLVED A PROFESSIONAL CHALLENGE");
-    lines.push(...toBulletLines(resumeData.challenge));
-  }
-
-  return lines.join("\n").trim();
-}
+};
 
 export async function POST(request: Request): Promise<Response> {
   let resumeData: Record<string, string> | null = null;
@@ -154,7 +99,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const raw = await generateContent(prompt, SYSTEM_PROMPT, false);
-    const finalResume = stripFences(raw);
+    const finalResume = stripMarkdown(stripFences(raw));
 
     if (!finalResume) {
       return NextResponse.json({
@@ -163,7 +108,6 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     console.log("GENERATED RESUME:", finalResume.slice(0, 300));
-
     return NextResponse.json({ finalResume });
   } catch (error) {
     console.error("Generate error:", error);

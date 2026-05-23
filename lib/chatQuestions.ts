@@ -1,540 +1,165 @@
-export type QuestionType =
-  | "text"
-  | "contact"
-  | "role"
-  | "experience"
-  | "techSkills"
-  | "softSkills"
-  | "project"
-  | "textarea";
+export type QuestionType = "text" | "textarea" | "multiselect" | "select" | "experience";
 
-export type ChatQuestion = {
+export type Question = {
   id: string;
-  question: string;
   type: QuestionType;
-  field: string;
-  meta?: {
-    showGithub?: boolean;
-    showLinkedin?: boolean;
-  };
+  label: string;
+  options?: string[];
 };
 
-export type RoleBucket =
-  | "software"
-  | "data"
-  | "devops"
-  | "qa"
-  | "design"
-  | "security"
-  | "non-tech"
-  | "unknown";
-
-type RoleSignals = {
-  bucket: RoleBucket;
-  showGithub: boolean;
-  showPortfolio: boolean;
-  showCodingProfile: boolean;
-  showLiveProjects: boolean;
-  showCloudLinks: boolean;
-  showCertifications: boolean;
+const ROLE_SKILLS: Record<string, string[]> = {
+  "Full Stack": ["React", "Node.js", "TypeScript", "Next.js", "PostgreSQL", "Express", "Docker", "Git", "REST APIs", "AWS"],
+  "Frontend": ["React", "TypeScript", "JavaScript", "HTML5/CSS3", "Tailwind CSS", "Next.js", "Vue.js", "Webpack", "Redux", "UI/UX Design"],
+  "Backend": ["Node.js", "Python", "Go", "Java", "PostgreSQL", "MongoDB", "Express", "Docker", "REST APIs", "GraphQL"],
+  "DevOps": ["AWS", "Docker", "Kubernetes", "Terraform", "CI/CD", "Linux", "Jenkins", "Ansible", "Azure", "GCP"],
+  "Designer": ["Figma", "UI Design", "UX Research", "Wireframing", "Prototyping", "Adobe Creative Suite", "Design Systems", "User Testing"],
+  "Data": ["Python", "SQL", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch", "Tableau", "Power BI", "R"],
+  "Marketing": ["SEO", "Google Analytics", "SEM", "Content Strategy", "Social Media Marketing", "Email Marketing", "Copywriting", "A/B Testing"],
+  "Management": ["Agile Methodologies", "Scrum", "Project Management", "Jira", "Product Strategy", "Team Leadership", "Roadmapping", "Stakeholder Management"],
+  "Other": ["Communication", "Problem Solving", "Teamwork", "Time Management", "Analytical Thinking", "Critical Thinking", "Adaptability", "Leadership"]
 };
 
-const SOFTWARE_KEYWORDS = [
-  "software",
-  "frontend",
-  "backend",
-  "full stack",
-  "full-stack",
-  "web developer",
-  "developer",
-  "engineer",
-  "react",
-  "next.js",
-  "node",
-  "javascript",
-  "typescript",
-  "java",
-  "python",
-  "mobile",
-  "android",
-  "ios",
-  "sde",
+const ROLE_KEYWORDS: { role: string; keywords: string[] }[] = [
+  { role: "Full Stack", keywords: ["fullstack", "full-stack", "full stack"] },
+  { role: "Frontend", keywords: ["frontend", "front-end", "web developer", "react", "html", "css", "vue", "angular", "ui/ux"] },
+  { role: "Backend", keywords: ["backend", "back-end", "node", "express", "django", "spring boot", "database", "api"] },
+  { role: "DevOps", keywords: ["devops", "cloud", "aws", "kubernetes", "docker", "ci/cd", "terraform", "sre"] },
+  { role: "Designer", keywords: ["designer", "design", "figma", "sketch", "photoshop", "ui", "ux", "wireframe"] },
+  { role: "Data", keywords: ["data", "ml", "machine learning", "ai", "scientist", "analyst", "python", "sql", "tensorflow", "pytorch"] },
+  { role: "Marketing", keywords: ["marketing", "seo", "sem", "social media", "growth", "copywriter"] },
+  { role: "Management", keywords: ["management", "manager", "lead", "director", "scrum", "agile", "team lead"] }
 ];
 
-const DATA_KEYWORDS = [
-  "data scientist",
-  "data analyst",
-  "machine learning",
-  "ml",
-  "ai",
-  "analytics",
-  "data engineer",
-  "deep learning",
-  "nlp",
-  "computer vision",
-];
-
-const DEVOPS_KEYWORDS = [
-  "devops",
-  "cloud",
-  "sre",
-  "site reliability",
-  "platform engineer",
-  "infrastructure",
-  "kubernetes",
-  "docker",
-  "ci/cd",
-  "terraform",
-  "aws",
-  "azure",
-  "gcp",
-];
-
-const QA_KEYWORDS = [
-  "qa",
-  "quality assurance",
-  "test engineer",
-  "sdet",
-  "automation tester",
-  "manual testing",
-  "testing",
-];
-
-const DESIGN_KEYWORDS = [
-  "ui/ux",
-  "ux",
-  "ui",
-  "product designer",
-  "product design",
-  "design",
-  "figma",
-  "sketch",
-  "adobe xd",
-  "prototype",
-];
-
-const SECURITY_KEYWORDS = [
-  "cybersecurity",
-  "security analyst",
-  "penetration",
-  "pentest",
-  "vulnerability",
-  "soc",
-  "siem",
-  "incident response",
-];
-
-const NON_TECH_KEYWORDS = [
-  "waiter",
-  "waitress",
-  "cashier",
-  "sales assistant",
-  "delivery",
-  "receptionist",
-  "teacher",
-  "accountant",
-  "nurse",
-  "driver",
-  "store",
-  "retail",
-  "hospitality",
-];
-
-const CODING_PROFILE_KEYWORDS = [
-  "leetcode",
-  "codeforces",
-  "hackerrank",
-  "dsa",
-  "competitive",
-  "coding challenge",
-];
-
-const LIVE_PROJECT_KEYWORDS = [
-  "live",
-  "deployed",
-  "demo",
-  "production",
-  "portfolio site",
-];
-
-const PORTFOLIO_KEYWORDS = [
-  "portfolio",
-  "dribbble",
-  "behance",
-  "case study",
-  "case studies",
-  "figma",
-  "ux",
-  "ui",
-];
-
-function normalize(text: string): string {
-  return text.toLowerCase();
+function detectRole(jd: string): string {
+  const text = jd.toLowerCase();
+  for (const item of ROLE_KEYWORDS) {
+    if (item.keywords.some(kw => text.includes(kw))) {
+      return item.role;
+    }
+  }
+  return "Other";
 }
 
-function hasAny(text: string, keywords: string[]): boolean {
-  return keywords.some((keyword) => text.includes(keyword));
+function extractSkills(jd: string, role: string): string[] {
+  const text = jd.toLowerCase();
+  const pool = ROLE_SKILLS[role] || ROLE_SKILLS["Other"];
+  const matched = pool.filter(skill => text.includes(skill.toLowerCase()));
+  const remaining = pool.filter(skill => !matched.includes(skill));
+  const result = [...matched, ...remaining].slice(0, 8);
+  return result;
 }
 
-export function analyzeJobDescription(input: string): RoleSignals {
-  const text = normalize(input);
-  const hasNonTech = hasAny(text, NON_TECH_KEYWORDS);
-  const isSoftware = hasAny(text, SOFTWARE_KEYWORDS);
-  const isData = hasAny(text, DATA_KEYWORDS);
-  const isDevOps = hasAny(text, DEVOPS_KEYWORDS);
-  const isQa = hasAny(text, QA_KEYWORDS);
-  const isDesign = hasAny(text, DESIGN_KEYWORDS);
-  const isSecurity = hasAny(text, SECURITY_KEYWORDS);
+export function buildWithJdQuestions(jobDescription: string): Question[] {
+  const jd = jobDescription || "";
+  const role = detectRole(jd);
+  const skills = extractSkills(jd, role);
 
-  let bucket: RoleBucket = "unknown";
-  if (isDesign) bucket = "design";
-  else if (isSecurity) bucket = "security";
-  else if (isDevOps) bucket = "devops";
-  else if (isData) bucket = "data";
-  else if (isQa) bucket = "qa";
-  else if (isSoftware) bucket = "software";
+  const q9Label = jd.toLowerCase().includes("devops") || jd.toLowerCase().includes("cloud")
+    ? "Which cloud platforms (AWS, Azure, GCP, etc.) have you worked with?"
+    : jd.toLowerCase().includes("design")
+    ? "Which design tools and process methods do you use?"
+    : jd.toLowerCase().includes("data") || jd.toLowerCase().includes("ml")
+    ? "Which models, datasets, or data tools have you worked with?"
+    : jd.toLowerCase().includes("lead") || jd.toLowerCase().includes("manager") || jd.toLowerCase().includes("management")
+    ? "What is the size of the team you managed?"
+    : "Is there anything else you want highlighted in your resume?";
 
-  if (bucket === "unknown" && hasNonTech) {
-    bucket = "non-tech";
-  }
-
-  const showGithub =
-    bucket === "software" ||
-    bucket === "data" ||
-    bucket === "devops" ||
-    bucket === "qa" ||
-    bucket === "security";
-  const showPortfolio = bucket === "design" || hasAny(text, PORTFOLIO_KEYWORDS);
-  const showCodingProfile =
-    bucket === "software" && hasAny(text, CODING_PROFILE_KEYWORDS);
-  const showLiveProjects =
-    bucket === "software" && hasAny(text, LIVE_PROJECT_KEYWORDS);
-  const showCloudLinks = bucket === "devops";
-  const showCertifications =
-    bucket === "data" ||
-    bucket === "devops" ||
-    bucket === "security" ||
-    bucket === "qa";
-
-  return {
-    bucket,
-    showGithub,
-    showPortfolio,
-    showCodingProfile,
-    showLiveProjects,
-    showCloudLinks,
-    showCertifications,
-  };
-}
-
-type BuildQuestionsOptions = {
-  mode: "withJd" | "scratch";
-  jobDescription?: string;
-};
-
-export function buildQuestions({
-  mode,
-  jobDescription = "",
-}: BuildQuestionsOptions): ChatQuestion[] {
-  const trimmed = jobDescription.trim();
-  const signals = analyzeJobDescription(trimmed);
-
-  if (mode === "scratch" && !trimmed) {
-    return [
-      {
-        id: "jd",
-        question:
-          "Paste the job description for the role. If you do not have one, describe the target tech role and stack.",
-        type: "textarea",
-        field: "jobDescription",
-      },
-    ];
-  }
-
-  const baseQuestions: ChatQuestion[] = [
+  return [
+    { id: "name", type: "text", label: "What is your full name?" },
+    { id: "contact", type: "text", label: "Your email and phone number?" },
     {
-      id: "name",
-      question: "What's your full name?",
+      id: "links",
       type: "text",
-      field: "name",
+      label: "Paste your LinkedIn, GitHub, or Portfolio URL (or all, separated by comma)"
     },
     {
-      id: "contact",
-      question: "Let's grab your contact info — enter your Email and Phone.",
-      type: "contact",
-      field: "contact",
-      meta: { showGithub: false, showLinkedin: false },
+      id: "skills",
+      type: "multiselect",
+      label: "Which of these skills do you have?",
+      options: skills
     },
     {
-      id: "location",
-      question: "What is your current location (City, State)?",
-      type: "text",
-      field: "location",
+      id: "experienceLevel",
+      type: "select",
+      label: "What is your experience level?",
+      options: ["Student / Fresher", "0-1 years", "1-3 years", "3-5 years", "5+ years"]
     },
     {
-      id: "linkedin",
-      question: "Share your LinkedIn profile link.",
-      type: "text",
-      field: "linkedin",
-    },
-    {
-      id: "experience",
-      question: "How many years of experience do you have?",
-      type: "experience",
-      field: "experience",
-    },
-  ];
-
-  const questions: ChatQuestion[] = [...baseQuestions];
-
-  if (signals.bucket === "software") {
-    questions.push(
-      {
-        id: "tech",
-        question: "What are your technical skills?",
-        type: "techSkills",
-        field: "techSkills",
-      },
-      {
-        id: "soft",
-        question: "What are your soft skills?",
-        type: "softSkills",
-        field: "softSkills",
-      },
-      {
-        id: "work",
-        question:
-          "Describe your work experience (company, role, duration, what you did).",
-        type: "textarea",
-        field: "workExperience",
-      },
-      {
-        id: "project",
-        question: "Tell me about a project you built.",
-        type: "project",
-        field: "projects",
-      },
-    );
-
-    if (signals.showLiveProjects) {
-      questions.push({
-        id: "live-projects",
-        question: "Share any live/deployed project links (if available).",
-        type: "text",
-        field: "liveProjects",
-      });
-    }
-
-    if (signals.showGithub) {
-      questions.push({
-        id: "github",
-        question: "Share your GitHub profile link (if available).",
-        type: "text",
-        field: "github",
-      });
-    }
-
-    if (signals.showCodingProfile) {
-      questions.push({
-        id: "coding-profile",
-        question:
-          "Share your coding profile links (LeetCode, Codeforces, etc.) if relevant.",
-        type: "text",
-        field: "codingProfiles",
-      });
-    }
-  }
-
-  if (signals.bucket === "data") {
-    questions.push(
-      {
-        id: "tech",
-        question:
-          "List your core data/ML skills and tools (Python, SQL, libraries).",
-        type: "textarea",
-        field: "dataTools",
-      },
-      {
-        id: "soft",
-        question: "What are your soft skills?",
-        type: "softSkills",
-        field: "softSkills",
-      },
-      {
-        id: "work",
-        question:
-          "Describe your data/ML experience or projects (impact, datasets, tools).",
-        type: "textarea",
-        field: "workExperience",
-      },
-    );
-
-    if (signals.showGithub) {
-      questions.push({
-        id: "github",
-        question:
-          "Share your GitHub or notebook repository links (if available).",
-        type: "text",
-        field: "github",
-      });
-    }
-  }
-
-  if (signals.bucket === "devops") {
-    questions.push(
-      {
-        id: "tools",
-        question:
-          "List your cloud platforms and DevOps tools (CI/CD, Docker, Kubernetes).",
-        type: "textarea",
-        field: "devopsTools",
-      },
-      {
-        id: "work",
-        question:
-          "Describe your infra/automation experience (projects, scale, impact).",
-        type: "textarea",
-        field: "workExperience",
-      },
-    );
-
-    if (signals.showGithub) {
-      questions.push({
-        id: "github",
-        question: "Share your GitHub/IaC repos if relevant.",
-        type: "text",
-        field: "github",
-      });
-    }
-  }
-
-  if (signals.bucket === "qa") {
-    questions.push(
-      {
-        id: "testing-type",
-        question: "Do you focus on manual testing, automation, or both?",
-        type: "text",
-        field: "testingType",
-      },
-      {
-        id: "testing-tools",
-        question:
-          "List testing tools/frameworks you use (Selenium, Cypress, etc.).",
-        type: "textarea",
-        field: "testingTools",
-      },
-      {
-        id: "work",
-        question:
-          "Describe your QA/testing experience and key responsibilities.",
-        type: "textarea",
-        field: "workExperience",
-      },
-    );
-
-    if (signals.showGithub) {
-      questions.push({
-        id: "github",
-        question:
-          "Share your GitHub repo links if relevant (automation frameworks).",
-        type: "text",
-        field: "github",
-      });
-    }
-  }
-
-  if (signals.bucket === "design") {
-    questions.push(
-      {
-        id: "tools",
-        question: "Which design tools do you use (Figma, Adobe XD, etc.)?",
-        type: "textarea",
-        field: "designTools",
-      },
-      {
-        id: "process",
-        question:
-          "Briefly describe your design process (research, wireframes, prototypes).",
-        type: "textarea",
-        field: "designProcess",
-      },
-    );
-
-    if (signals.showPortfolio) {
-      questions.push({
-        id: "portfolio",
-        question: "Share your portfolio(if not provided) or case study links.",
-        type: "text",
-        field: "portfolio",
-      });
-    }
-  }
-
-  if (signals.bucket === "security") {
-    questions.push(
-      {
-        id: "tools",
-        question: "List security tools/platforms you have used.",
-        type: "textarea",
-        field: "securityTools",
-      },
-      {
-        id: "labs",
-        question:
-          "Describe labs, assessments, or security projects you have worked on.",
-        type: "textarea",
-        field: "securityProjects",
-      },
-    );
-
-    if (signals.showGithub) {
-      questions.push({
-        id: "github",
-        question: "Share relevant GitHub or project links (if available).",
-        type: "text",
-        field: "github",
-      });
-    }
-  }
-
-  if (
-    signals.showPortfolio &&
-    signals.bucket !== "design" &&
-    signals.bucket !== "software"
-  ) {
-    questions.push({
-      id: "portfolio",
-      question:
-        "Share your portfolio(if not provided) or case study links (if applicable).",
-      type: "text",
-      field: "portfolio",
-    });
-  }
-
-  if (signals.showCertifications) {
-    questions.push({
-      id: "certs",
-      question: "List any relevant certifications (if you have them).",
+      id: "workExperience",
       type: "textarea",
-      field: "certifications",
-    });
-  }
-
-  questions.push(
+      label: "Describe your most relevant work experience or internship. Include company, role, and what you built or achieved."
+    },
+    {
+      id: "projects",
+      type: "textarea",
+      label: "List your top 2-3 projects. Include project name, tech stack, and key outcome for each."
+    },
     {
       id: "education",
-      question: "Tell me about your education (degree, institution, year).",
-      type: "textarea",
-      field: "education",
+      type: "text",
+      label: "Your highest qualification, institution, and year of passing/expected?"
     },
     {
-      id: "challenge",
-      question:
-        "Describe a professional challenge you solved (problem → action → result).",
+      id: jd.toLowerCase().includes("devops") || jd.toLowerCase().includes("cloud") ? "cloudPlatforms"
+        : jd.toLowerCase().includes("design") ? "designTools"
+        : jd.toLowerCase().includes("data") || jd.toLowerCase().includes("ml") ? "dataML"
+        : jd.toLowerCase().includes("lead") || jd.toLowerCase().includes("manager") || jd.toLowerCase().includes("management") ? "teamSize"
+        : "highlighted",
       type: "textarea",
-      field: "challenge",
-    },
-  );
+      label: q9Label
+    }
+  ];
+}
 
-  return questions;
+export function buildWithoutJdQuestions(): Question[] {
+  return [
+    {
+      id: "targetRole",
+      type: "text",
+      label: "What role or domain are you building this resume for? (e.g. Frontend Developer, UI/UX Designer, Data Analyst)"
+    },
+    { id: "name", type: "text", label: "What is your full name?" },
+    { id: "contact", type: "text", label: "Your email and phone number?" },
+    {
+      id: "links",
+      type: "text",
+      label: "Paste your LinkedIn, GitHub, or Portfolio URL (or all, separated by comma)"
+    },
+    {
+      id: "experienceLevel",
+      type: "select",
+      label: "What is your experience level?",
+      options: ["Student / Fresher", "0-1 years", "1-3 years", "3-5 years", "5+ years"]
+    },
+    {
+      id: "skills",
+      type: "textarea",
+      label: "List your top technical and soft skills relevant to your target role."
+    },
+    {
+      id: "workExperience",
+      type: "textarea",
+      label: "Describe your most relevant work experience or internship. Include company, role, duration, and key achievements. Write 'None' if not applicable."
+    },
+    {
+      id: "projects",
+      type: "textarea",
+      label: "List your top 2-3 projects. Include name, tech stack, and key outcome. These matter more than experience for freshers."
+    },
+    {
+      id: "education",
+      type: "text",
+      label: "Your highest qualification, institution, and year of passing or expected graduation?"
+    },
+    {
+      id: "achievements",
+      type: "textarea",
+      label: "Any certifications, awards, hackathons, open source contributions, or leadership roles? Write 'None' if not applicable."
+    },
+    {
+      id: "summary",
+      type: "textarea",
+      label: "Write 2-3 sentences about yourself as a professional. This becomes your resume summary. (We will help improve it)"
+    }
+  ];
 }
