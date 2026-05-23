@@ -111,6 +111,19 @@ export default function ResumeTemplate({
         </TemplateSection>
       )}
 
+      {validEducation.length > 0 && (
+        <TemplateSection title="Education">
+          {validEducation.map((entry, i) => (
+            <div key={i} className="mb-2 last:mb-0 text-sm text-gray-800">
+              <p className="font-semibold text-gray-900">{entry.institution}</p>
+              {entry.degree && <p>{entry.degree}</p>}
+              {entry.duration && <p className="text-xs text-gray-500">{entry.duration}</p>}
+              {entry.grade && <p className="text-xs text-gray-500">{entry.grade}</p>}
+            </div>
+          ))}
+        </TemplateSection>
+      )}
+
       {uniqueExperience.length > 0 && (
         <TemplateSection title="Experience">
           {uniqueExperience.map((entry, i) => (
@@ -138,18 +151,7 @@ export default function ResumeTemplate({
         </TemplateSection>
       )}
 
-      {validEducation.length > 0 && (
-        <TemplateSection title="Education">
-          {validEducation.map((entry, i) => (
-            <div key={i} className="mb-2 last:mb-0 text-sm text-gray-800">
-              <p className="font-semibold text-gray-900">{entry.institution}</p>
-              {entry.degree && <p>{entry.degree}</p>}
-              {entry.duration && <p className="text-xs text-gray-500">{entry.duration}</p>}
-              {entry.grade && <p className="text-xs text-gray-500">{entry.grade}</p>}
-            </div>
-          ))}
-        </TemplateSection>
-      )}
+      
 
       {achievements.length > 0 && (
         <TemplateSection title="Achievements">
